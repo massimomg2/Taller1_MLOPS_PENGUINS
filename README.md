@@ -7,8 +7,12 @@ Para empezar se debe clonar el repositorio en el equipo o máquina utilizada. Pa
 
 `git clone https://github.com/massimomg2/Taller1_MLOPS_PENGUINS.git`
 
-Después se debe ejecutar el archivo que entrena los modelos
+Después se debe ejecutar el archivo que entrena los modelos (no hacer si antes haber instalado librerías con `pip install -r requirements.txt`)
 
 `Python Modelos/modelomlops.py`
 
 Posterior a eso podemos crear el contenedor de docker como sigue:
+
+`docker build -f Docker/Dockerfile --tag penguins_api .`
+
+Una vez que se construya, 
