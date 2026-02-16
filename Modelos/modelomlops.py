@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1vZjSrAZuSXV9UrhxTJf1TIM3pAFBfjzb
 """
 
-pip install -q pandas scikit-learn joblib palmerpenguins
+#pip install -q pandas scikit-learn joblib palmerpenguins
 
 import pandas as pd
 from palmerpenguins import load_penguins
@@ -99,10 +99,10 @@ print("\nReporte de clasificación:\n", classification_report(y_test, y_pred))
 # -----------------------------
 # 6. Guardar el modelo
 # -----------------------------
-model_file = "penguin_decision_tree.pkl"
+model_file = "Modelos/penguin_decision_tree.pkl"
 joblib.dump(clf, model_file)
 print(f"\nModelo guardado exitosamente en: {model_file}")
 
-model_file = "penguin_random_forest.pkl"
+model_file = "Modelos/penguin_random_forest.pkl"
 joblib.dump(clfRF, model_file)
 print(f"\nModelo guardado exitosamente en: {model_file}")

@@ -6,8 +6,9 @@ Endpoints POST: sólamente /pred. Se pasa un argumento adicional para usar un mo
 import os
 import joblib
 import pandas as pd
-from FastAPI import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from contextlib import asynccontextmanager
 
 # Declaración de variables y rutas
 API_DIR = os.path.dirname(os.path.abspath(__file__)) # __file__ es una variable de python que contiene la ruta del archivo siendo ejecutado
@@ -16,26 +17,29 @@ MODEL_DIR = os.path.join(PROJECT_ROOT, "Modelos")
 DT_PATH = os.path.join(MODEL_DIR, "penguin_decision_tree.pkl")
 RF_PATH = os.path.join(MODEL_DIR, "penguin_random_forest.pkl")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("iniciando aplicación")
+    
+    try:
+        app.state.model_dt = joblib.load(DT_PATH)
+        app.state.model_rf = joblib.load(RF_PATH)
+        print(f"Aplicación iniciada con éxito, modelos cargados desde {DT_PATH}")
+        yield
+    except Exception as e:
+        print("Error iniciando aplicación")
+        print(str(e))
+        return
+
 app = FastAPI(
     title="Penguins Species API",
     description="Predicción de especie de pingüino con modelos DT y RF.",
     version="3.0.0",
+    lifespan = lifespan
 )
 
 model_dt = None
 model_rf = None
-
-# Configuración de la app para iniciación, se cargan los modelos
-
-@app.on_event("startup")
-def load_models():
-    global model_rf, model_lr
-    if not os.path.isfile(RF_PATH):
-        raise FileNotFoundError(f"No se encontró el modelo RF: {RF_PATH}")
-    if not os.path.isfile(LR_PATH):
-        raise FileNotFoundError(f"No se encontró el modelo LR: {LR_PATH}")
-    model_rf = joblib.load(RF_PATH)
-    model_lr = joblib.load(LR_PATH)
 
 # Utilizamos BaseModel / Fetaure de pydantic, una librería que nos permite definir clases con los objetos que deseamos mandar que garantizan su fácil manejo
 
@@ -63,17 +67,17 @@ def predict_penguin_species(features: PenguinFeatures) -> str:
         "year": features.year,
     }])
     if features.model == 'DT':
-      pred = model_dt.predict(row)
+      pred = app.state.model_dt.predict(row)
     elif features.model == 'RF':
-      pred = model_rf.predict(row)
+      pred = app.state.model_rf.predict(row)
     else:
-      raise
+      raise ValueError("Modelo inválido. Use 'DT' o 'RF'")
     return str(pred[0])
 
 @app.post("/pred")
-def predict_rf(features: PenguinFeatures):
+def predict(features: PenguinFeatures):
     """Predicción de especie usando el modelo especificado"""
-    if model_rf is None or model_dt is None:
+    if app.state.model_rf is None or app.state.model_dt is None:
         raise HTTPException(status_code=503, detail="Modelos no cargados con éxito")
     try:
         species = predict_penguin_species(features)
